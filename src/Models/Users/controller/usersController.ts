@@ -1,5 +1,8 @@
-import {Request, Response, } from 'express';
+import {Request, Response} from 'express';
+import * as Yup from 'yup';
+
 import connection from '../../../database/knex/connection'
+import userView from '../Views/users_view'
 
 interface IUserDTO {
   users_id: string;
@@ -38,26 +41,56 @@ export default class UsersController{
     .select<IUserDTO[]>('*');
 
     response.header('X-Total-Count', count.count);
-    return response.json(users);
+    return response.json(userView.renderMany(users))
   }
 
   public async show(request: Request, response: Response){
-
-  const {users_id} = request.params;
+    try {
+      const {users_id} = request.params;
+    
+    const [user] = await connection('users')
+    .where('users_id', users_id)
+    .select<IUserDTO[]>('*')
   
-  const [user] = await connection('users')
-  .where('users_id', users_id)
-  .select<IUserDTO[]>('*')
-
-  return response.json(user)
-  }
+    return response.json(userView.render(user))
+    } catch (error) {
+      console.log(error)
+      if (error.code === '22P02'){
+        return response.status(404).json({
+          error: 'The user code is incorrect'
+        })
+      }
+      return response.status(404).json({
+        error: 'critical failure'
+      })
+    }  
+    
+    }
 
   public async create(request: Request, response: Response){
     const {
       users_name,
       users_date_of_birth,
-      users_avatar,
     } = await request.body;
+
+    const users_avatar = request.file.filename;
+    
+    const data = {
+      users_name,
+      users_date_of_birth,
+      users_avatar
+    }
+
+    const schema = Yup.object().shape({
+      users_name: Yup.string().required(),
+      users_date_of_birth: Yup.date().required(),
+      users_avatar: Yup.string().required(),
+    })
+
+    await schema.validate(data, {
+      abortEarly: false,
+    })
+
 
     const [user] = await connection('users')
       .insert({
@@ -70,17 +103,5 @@ export default class UsersController{
     return response.json(user);
   }
 
-  public async delete(request: Request, response: Response){
-    const {users_id} = request.params;
 
-    await connection('users')
-    .where<IUserDTO>('users_id', users_id)
-    .delete();
-
-    return response.status(204).send();
-  }
-
-  public async update(request: Request, response: Response){
-
-  }
 }

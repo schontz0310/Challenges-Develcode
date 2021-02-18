@@ -23,51 +23,27 @@ interface Ipage{
 
 export default class UsersController{
 
-  public async index(request: Request, response: Response){
-    let page: Ipage = {
-      page: '1'
-    };
-    
-    page = (request.query) as unknown as Ipage;
-    
-    const [count]: ICount[] = await connection('users').count<ICount[]>();
-
-    const users = await connection('users')
-    .limit(5)
-    .offset((parseInt(page.page)-1)*5)
-    .select<IUserDTO[]>('*');
-
-    response.header('X-Total-Count', count.count);
-    return response.json(users);
-  }
-
   public async show(request: Request, response: Response){
-
-  const {users_id} = request.params;
+  try {
+    const {users_id} = request.params;
   
   const [user] = await connection('users')
   .where('users_id', users_id)
   .select<IUserDTO[]>('*')
 
   return response.json(user)
-  }
-
-  public async create(request: Request, response: Response){
-    const {
-      users_name,
-      users_date_of_birth,
-      users_avatar,
-    } = await request.body;
-
-    const [user] = await connection('users')
-      .insert({
-        users_name,
-        users_date_of_birth,
-        users_avatar,
+  } catch (error) {
+    console.log(error)
+    if (error.code === '22P02'){
+      return response.status(404).json({
+        error: 'The user code is incorrect'
       })
-      .returning<IUserDTO[]>('*');
-    
-    return response.json(user);
+    }
+    return response.status(404).json({
+      error: 'critical failure'
+    })
+  }  
+  
   }
 
   public async delete(request: Request, response: Response){
@@ -81,6 +57,6 @@ export default class UsersController{
   }
 
   public async update(request: Request, response: Response){
-
+    
   }
 }
