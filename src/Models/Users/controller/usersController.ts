@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import connection from '../../../database/knex/connection'
 import userView from '../Views/users_view'
 
+
 interface IUserDTO {
   users_id: string;
   users_name: string;
@@ -17,7 +18,6 @@ interface ICount{
   count: string
   
 }  
-
 
 interface Ipage{
   page: string
@@ -100,7 +100,27 @@ export default class UsersController{
       })
       .returning<IUserDTO[]>('*');
     
-    return response.json(user);
+    return response.json(userView.render(user));
+  }
+  
+  public async update(request: Request, response: Response){
+    
+    const {users_id} = request.params;
+
+    const {
+      users_name,
+      users_date_of_birth,
+    } = await request.body;
+    
+    const [user] = await connection('users')
+      .where('users_id', users_id)
+      .update({
+        users_name,
+        users_date_of_birth,
+      })
+      .returning<IUserDTO[]>('*');
+    
+      return response.json(userView.render(user))
   }
 
 
