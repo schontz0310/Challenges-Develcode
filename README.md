@@ -83,7 +83,7 @@ Alguns detalhes:
 
 ```sh
 
-  $ cd Challenges-Develcode
+  $ cd develcode_server
   
   # Instalando as dependências do projeto.
   $ yarn # ou npm install
