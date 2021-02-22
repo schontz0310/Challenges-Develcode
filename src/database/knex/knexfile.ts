@@ -5,8 +5,8 @@ const KnexConfig = {
     client: 'postgresql',
     connection: {
       database: 'ChallengeDevelcode',
-      user: 'postgres',
-      password: 'roberta0310',
+      user: USER_NAME,
+      password: PASSWORD,
     },
     pool: {
       min: 2,
